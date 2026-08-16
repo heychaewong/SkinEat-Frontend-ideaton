@@ -36,6 +36,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.lionideaton.navigation.SkinBasketDestination
 import com.example.lionideaton.ui.screens.AnalysisScreen
+import com.example.lionideaton.ui.screens.AuthScreen
 import com.example.lionideaton.ui.screens.BasketScreen
 import com.example.lionideaton.ui.screens.CartScreen
 import com.example.lionideaton.ui.screens.CartViewModel
@@ -91,16 +92,20 @@ fun SkinBasketApp() {
     val mealLogViewModel: MealLogViewModel = viewModel()
     // Shared across SkinLog/Report/My so a captured skin photo shows up in the Before/After + history.
     val skinLogViewModel: SkinLogViewModel = viewModel()
-    // Shared across Onboarding/Home/My so the survey result shows up as real skin type + tags.
+    // Shared across Auth/Onboarding/Home/My so sign-in state + the survey result show up everywhere.
     val userProfileViewModel: UserProfileViewModel = viewModel()
+    val isLoggedIn by userProfileViewModel.isLoggedIn.collectAsState()
     val onboardingCompleted by userProfileViewModel.onboardingCompleted.collectAsState()
-    val showOnboarding = currentRoute == SkinBasketDestination.Home.route && !onboardingCompleted
+    val isHomeRoute = currentRoute == SkinBasketDestination.Home.route
+    val showAuth = isHomeRoute && !isLoggedIn
+    val showOnboarding = isHomeRoute && isLoggedIn && !onboardingCompleted
+    val hideChrome = showAuth || showOnboarding
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             when {
-                showOnboarding -> Unit
+                hideChrome -> Unit
 
                 detailTitle != null -> CenterAlignedTopAppBar(
                     title = { Text(text = detailTitle) },
@@ -156,7 +161,7 @@ fun SkinBasketApp() {
             }
         },
         bottomBar = {
-            if (!showOnboarding) {
+            if (!hideChrome) {
                 SkinBasketBottomBar(navController)
             }
         }
@@ -167,15 +172,15 @@ fun SkinBasketApp() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(SkinBasketDestination.Home.route) {
-                if (onboardingCompleted) {
-                    HomeScreen(
+                when {
+                    !isLoggedIn -> AuthScreen(userProfileViewModel = userProfileViewModel)
+                    !onboardingCompleted -> OnboardingScreen(userProfileViewModel = userProfileViewModel)
+                    else -> HomeScreen(
                         onLogFoodClick = { navController.navigate(SkinBasketDestination.FoodLog.route) },
                         onSkinScoreClick = { navController.navigate(SkinBasketDestination.Analysis.route) },
                         mealLogViewModel = mealLogViewModel,
                         userProfileViewModel = userProfileViewModel
                     )
-                } else {
-                    OnboardingScreen(userProfileViewModel = userProfileViewModel)
                 }
             }
             composable(SkinBasketDestination.FoodLog.route) { FoodLogScreen(mealLogViewModel = mealLogViewModel) }

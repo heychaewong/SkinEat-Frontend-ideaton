@@ -21,7 +21,8 @@ enum class ConstraintType { ALLERGY, DISLIKE }
 data class UserConstraintItem(val type: ConstraintType, val ingredientName: String)
 
 data class UserProfile(
-    val nickname: String = "김민지",
+    val email: String = "",
+    val nickname: String = "",
     val skinType: SkinType? = null,
     val concerns: List<SkinConcern> = emptyList(),
     val constraints: List<UserConstraintItem> = emptyList()
