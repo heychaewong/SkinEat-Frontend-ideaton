@@ -45,6 +45,7 @@ import com.example.lionideaton.ui.screens.HomeScreen
 import com.example.lionideaton.ui.screens.MealLogViewModel
 import com.example.lionideaton.ui.screens.MyScreen
 import com.example.lionideaton.ui.screens.OnboardingScreen
+import com.example.lionideaton.ui.screens.RecipeScreen
 import com.example.lionideaton.ui.screens.ReportScreen
 import com.example.lionideaton.ui.screens.SkinLogScreen
 import com.example.lionideaton.ui.screens.SkinLogViewModel
@@ -75,6 +76,7 @@ private val detailScreenTitles = mapOf(
     SkinBasketDestination.Analysis.route to "식단 피부 분석",
     SkinBasketDestination.SkinLog.route to "피부기록",
     SkinBasketDestination.Cart.route to "장바구니",
+    SkinBasketDestination.Recipe.route to "레시피 상세",
     SkinBasketDestination.Report.route to "피부 분석 리포트"
 )
 
@@ -186,11 +188,16 @@ fun SkinBasketApp() {
             composable(SkinBasketDestination.FoodLog.route) { FoodLogScreen(mealLogViewModel = mealLogViewModel) }
             composable(SkinBasketDestination.Analysis.route) { AnalysisScreen(mealLogViewModel = mealLogViewModel) }
             composable(SkinBasketDestination.Basket.route) {
-                BasketScreen(cartViewModel = cartViewModel, mealLogViewModel = mealLogViewModel)
+                BasketScreen(
+                    cartViewModel = cartViewModel,
+                    mealLogViewModel = mealLogViewModel,
+                    onRecipeClick = { navController.navigate(SkinBasketDestination.Recipe.route) }
+                )
             }
             composable(SkinBasketDestination.Cart.route) {
                 CartScreen(cartViewModel = cartViewModel)
             }
+            composable(SkinBasketDestination.Recipe.route) { RecipeScreen() }
             composable(SkinBasketDestination.SkinLog.route) { SkinLogScreen(skinLogViewModel = skinLogViewModel) }
             composable(SkinBasketDestination.Report.route) { ReportScreen(skinLogViewModel = skinLogViewModel) }
             composable(SkinBasketDestination.My.route) {

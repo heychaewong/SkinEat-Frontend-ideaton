@@ -24,23 +24,40 @@ class UserProfileViewModel : ViewModel() {
     private val _onboardingCompleted = MutableStateFlow(false)
     val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
 
-    // In-memory only — there's no backend auth endpoint wired yet, so this just simulates
-    // account storage for the duration of the app process (see NetworkModule for the one
-    // real API call that exists so far).
-    private val registeredAccounts = mutableMapOf<String, Pair<String, String>>() // email -> (password, nickname)
+    // In-memory only, keyed by email — there's no backend auth endpoint or local persistence
+    // wired yet, so this only survives for the current app process (wiped on app restart).
+    // Tracking onboardingCompleted per account (not as one global flag) is what makes the
+    // "onboarding only right after signup" behavior work when switching accounts in one session.
+    private data class Account(var password: String, var profile: UserProfile, var onboardingCompleted: Boolean = false)
+
+    private val accounts = mutableMapOf<String, Account>()
 
     fun signUp(email: String, password: String, nickname: String): Boolean {
-        if (registeredAccounts.containsKey(email)) return false
-        registeredAccounts[email] = password to nickname
-        _profile.update { it.copy(email = email, nickname = nickname) }
+        val key = email.trim()
+        if (accounts.containsKey(key)) return false
+        val newProfile = UserProfile(email = key, nickname = nickname)
+        accounts[key] = Account(password = password, profile = newProfile, onboardingCompleted = false)
+        _profile.value = newProfile
+        _onboardingCompleted.value = false
         _isLoggedIn.value = true
         return true
     }
 
+    // Demo-friendly: since there's no real backend to check credentials against yet, an
+    // unregistered (or blank) email just logs the tester in directly instead of failing.
+    // Only a registered email with the WRONG password is actually rejected.
     fun login(email: String, password: String): Boolean {
-        val account = registeredAccounts[email] ?: return false
-        if (account.first != password) return false
-        _profile.update { it.copy(email = email, nickname = account.second) }
+        val key = email.trim().ifBlank { "guest@skinbasket.demo" }
+        val existing = accounts[key]
+        if (existing != null && existing.password != password) return false
+
+        val account = existing ?: Account(
+            password = password,
+            profile = UserProfile(email = key, nickname = "게스트")
+        ).also { accounts[key] = it }
+
+        _profile.value = account.profile
+        _onboardingCompleted.value = account.onboardingCompleted
         _isLoggedIn.value = true
         return true
     }
@@ -60,6 +77,7 @@ class UserProfileViewModel : ViewModel() {
             )
         }
         _onboardingCompleted.value = true
+        persistCurrentProfile(onboardingCompleted = true)
     }
 
     fun updateSkinTargets(concerns: List<SkinConcern>, allergies: List<String>, dislikes: List<String>) {
@@ -69,6 +87,15 @@ class UserProfileViewModel : ViewModel() {
                 constraints = allergies.map { name -> UserConstraintItem(ConstraintType.ALLERGY, name) } +
                     dislikes.map { name -> UserConstraintItem(ConstraintType.DISLIKE, name) }
             )
+        }
+        persistCurrentProfile()
+    }
+
+    private fun persistCurrentProfile(onboardingCompleted: Boolean? = null) {
+        val email = _profile.value.email
+        accounts[email]?.let {
+            it.profile = _profile.value
+            if (onboardingCompleted != null) it.onboardingCompleted = onboardingCompleted
         }
     }
 }

@@ -19,6 +19,7 @@ enum class SkinBasketDestination(
     Analysis(route = "analysis", label = "분석"),
     Basket(route = "basket", label = "추천식재료", icon = Icons.Filled.ShoppingBasket, showInBottomBar = true),
     Cart(route = "cart", label = "장바구니"),
+    Recipe(route = "recipe", label = "레시피 상세"),
     SkinLog(route = "skin", label = "피부기록"),
     Report(route = "report", label = "리포트", icon = Icons.Filled.BarChart, showInBottomBar = true),
     My(route = "my", label = "마이", icon = Icons.Filled.Person, showInBottomBar = true)

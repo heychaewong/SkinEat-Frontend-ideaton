@@ -64,13 +64,9 @@ fun AuthScreen(
                 }
             }
         } else {
-            when {
-                email.isBlank() || password.isBlank() -> errorMessage = "이메일과 비밀번호를 입력해주세요"
-                else -> {
-                    val success = userProfileViewModel.login(email.trim(), password)
-                    if (success) onAuthenticated() else errorMessage = "이메일 또는 비밀번호가 올바르지 않아요"
-                }
-            }
+            // Blank fields are allowed here — see UserProfileViewModel.login for why.
+            val success = userProfileViewModel.login(email.trim(), password)
+            if (!success) errorMessage = "이메일 또는 비밀번호가 올바르지 않아요"
         }
     }
 

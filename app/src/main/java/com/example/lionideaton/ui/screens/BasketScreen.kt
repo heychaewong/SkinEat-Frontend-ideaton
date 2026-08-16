@@ -1,5 +1,6 @@
 package com.example.lionideaton.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -87,7 +88,8 @@ private val recommendedRecipe = RecommendedRecipe("연어 브로콜리 지중해
 fun BasketScreen(
     modifier: Modifier = Modifier,
     cartViewModel: CartViewModel,
-    mealLogViewModel: MealLogViewModel = viewModel()
+    mealLogViewModel: MealLogViewModel = viewModel(),
+    onRecipeClick: () -> Unit = {}
 ) {
     val allEntries by mealLogViewModel.entries.collectAsState()
     val recentEntries = remember(allEntries) { mealLogViewModel.recentEntries() }
@@ -153,7 +155,7 @@ fun BasketScreen(
             )
         }
 
-        RecommendedRecipeSection(recipe = recommendedRecipe)
+        RecommendedRecipeSection(recipe = recommendedRecipe, onClick = onRecipeClick)
     }
 }
 
@@ -259,7 +261,7 @@ private fun NutrientBadge(text: String) {
 }
 
 @Composable
-private fun RecommendedRecipeSection(recipe: RecommendedRecipe) {
+private fun RecommendedRecipeSection(recipe: RecommendedRecipe, onClick: () -> Unit) {
     Column {
         Text(
             text = "추천 피부 구원 레시피",
@@ -269,7 +271,9 @@ private fun RecommendedRecipeSection(recipe: RecommendedRecipe) {
         )
         Spacer(modifier = Modifier.height(12.dp))
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = CardWhite)
         ) {
