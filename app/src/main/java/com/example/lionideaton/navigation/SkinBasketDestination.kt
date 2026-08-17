@@ -11,16 +11,22 @@ import androidx.compose.ui.graphics.vector.ImageVector
 enum class SkinBasketDestination(
     val route: String,
     val label: String,
-    val icon: ImageVector? = null,
-    val showInBottomBar: Boolean = false
+    val icon: ImageVector? = null
 ) {
-    Home(route = "home", label = "홈", icon = Icons.Filled.Home, showInBottomBar = true),
-    FoodLog(route = "foods", label = "음식기록", icon = Icons.Filled.RestaurantMenu, showInBottomBar = true),
+    Home(route = "home", label = "홈", icon = Icons.Filled.Home),
+    FoodLog(route = "foods", label = "음식기록", icon = Icons.Filled.RestaurantMenu),
     Analysis(route = "analysis", label = "분석"),
-    Basket(route = "basket", label = "추천식재료", icon = Icons.Filled.ShoppingBasket, showInBottomBar = true),
-    Cart(route = "cart", label = "장바구니"),
+    Basket(route = "basket", label = "장바구니", icon = Icons.Filled.ShoppingBasket),
+    Cart(route = "cart", label = "담은 재료"),
     Recipe(route = "recipe", label = "레시피 상세"),
     SkinLog(route = "skin", label = "피부기록"),
-    Report(route = "report", label = "리포트", icon = Icons.Filled.BarChart, showInBottomBar = true),
-    My(route = "my", label = "마이", icon = Icons.Filled.Person, showInBottomBar = true)
+    Report(route = "report", label = "리포트", icon = Icons.Filled.BarChart),
+    My(route = "my", label = "마이", icon = Icons.Filled.Person);
+
+    companion object {
+        // Explicit order for the bottom bar: 홈 / 리포트 / (카메라 — a special center button
+        // rendered separately, not a real destination) / 장바구니 / 마이. 음식기록 and 피부기록
+        // are still real routes, just reached via the camera button's bottom sheet instead of a tab.
+        val bottomBarOrder: List<SkinBasketDestination> = listOf(Home, Report, Basket, My)
+    }
 }

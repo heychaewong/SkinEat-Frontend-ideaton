@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,21 +15,35 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -41,10 +56,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.lionideaton.data.model.SkinLogEntry
+import com.example.lionideaton.domain.SkinScoreCalculator
 import com.example.lionideaton.ui.theme.CardWhite
+import com.example.lionideaton.ui.theme.CautionTagText
 import com.example.lionideaton.ui.theme.CoralPrimary
 import com.example.lionideaton.ui.theme.PositiveTagBackground
 import com.example.lionideaton.ui.theme.PositiveTagText
@@ -53,6 +72,335 @@ import com.example.lionideaton.ui.theme.TextPrimary
 import com.example.lionideaton.ui.theme.TextSecondary
 import com.example.lionideaton.ui.theme.WarningTagBackground
 import com.example.lionideaton.ui.theme.WarningTagText
+import kotlinx.coroutines.delay
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.YearMonth
+
+private enum class ReportStage { SELECT, LOADING, RESULT }
+private enum class ReportCalendarType(val label: String) { SKIN("피부달력"), FOOD("음식달력") }
+private enum class ReportPeriodPreset { LAST_7, LAST_30, CUSTOM }
+
+@Composable
+fun ReportScreen(
+    modifier: Modifier = Modifier,
+    skinLogViewModel: SkinLogViewModel = viewModel(),
+    mealLogViewModel: MealLogViewModel = viewModel()
+) {
+    var stage by remember { mutableStateOf(ReportStage.SELECT) }
+    var calendarType by remember { mutableStateOf(ReportCalendarType.SKIN) }
+    var preset by remember { mutableStateOf(ReportPeriodPreset.LAST_7) }
+    var displayMonth by remember { mutableStateOf(YearMonth.now()) }
+    var customStart by remember { mutableStateOf<LocalDate?>(null) }
+    var customEnd by remember { mutableStateOf<LocalDate?>(null) }
+
+    val today = remember { LocalDate.now() }
+    val skinEntries by skinLogViewModel.entries.collectAsState()
+    val mealEntries by mealLogViewModel.entries.collectAsState()
+
+    val rangeStart: LocalDate
+    val rangeEnd: LocalDate
+    when (preset) {
+        ReportPeriodPreset.LAST_7 -> { rangeStart = today.minusDays(6); rangeEnd = today }
+        ReportPeriodPreset.LAST_30 -> { rangeStart = today.minusDays(29); rangeEnd = today }
+        ReportPeriodPreset.CUSTOM -> {
+            val start = customStart ?: today
+            val end = customEnd ?: start
+            rangeStart = if (start.isAfter(end)) end else start
+            rangeEnd = if (start.isAfter(end)) start else end
+        }
+    }
+
+    fun onDateTap(date: LocalDate) {
+        if (preset != ReportPeriodPreset.CUSTOM || (customStart != null && customEnd != null)) {
+            preset = ReportPeriodPreset.CUSTOM
+            customStart = date
+            customEnd = null
+        } else if (customStart == null) {
+            customStart = date
+        } else {
+            customEnd = date
+        }
+    }
+
+    LaunchedEffect(stage) {
+        if (stage == ReportStage.LOADING) {
+            delay(1200)
+            stage = ReportStage.RESULT
+        }
+    }
+
+    when (stage) {
+        ReportStage.SELECT -> ReportCalendarSelectContent(
+            modifier = modifier,
+            calendarType = calendarType,
+            onCalendarTypeChange = { calendarType = it },
+            displayMonth = displayMonth,
+            onMonthChange = { displayMonth = it },
+            preset = preset,
+            onPresetSelected = { selected ->
+                preset = selected
+                if (selected != ReportPeriodPreset.CUSTOM) {
+                    customStart = null
+                    customEnd = null
+                }
+            },
+            rangeStart = rangeStart,
+            rangeEnd = rangeEnd,
+            onDateTap = ::onDateTap,
+            skinEntries = skinEntries,
+            mealLogViewModel = mealLogViewModel,
+            mealEntriesVersion = mealEntries.size,
+            onGenerateClick = { stage = ReportStage.LOADING }
+        )
+
+        ReportStage.LOADING -> ReportLoadingContent(modifier = modifier)
+
+        ReportStage.RESULT -> GeneratedReportContent(
+            modifier = modifier,
+            rangeStart = rangeStart,
+            rangeEnd = rangeEnd,
+            skinLogViewModel = skinLogViewModel,
+            onBackToSelect = { stage = ReportStage.SELECT }
+        )
+    }
+}
+
+@Composable
+private fun ReportCalendarSelectContent(
+    modifier: Modifier = Modifier,
+    calendarType: ReportCalendarType,
+    onCalendarTypeChange: (ReportCalendarType) -> Unit,
+    displayMonth: YearMonth,
+    onMonthChange: (YearMonth) -> Unit,
+    preset: ReportPeriodPreset,
+    onPresetSelected: (ReportPeriodPreset) -> Unit,
+    rangeStart: LocalDate,
+    rangeEnd: LocalDate,
+    onDateTap: (LocalDate) -> Unit,
+    skinEntries: List<SkinLogEntry>,
+    mealLogViewModel: MealLogViewModel,
+    mealEntriesVersion: Int,
+    onGenerateClick: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Column {
+            Text(text = "리포트 만들기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "확인하고 싶은 기간과 종류를 선택해주세요", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(50))
+                .background(SurfaceMuted)
+                .padding(4.dp)
+        ) {
+            ReportCalendarType.entries.forEach { type ->
+                val selected = type == calendarType
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(50))
+                        .background(if (selected) CardWhite else Color.Transparent)
+                        .clickable { onCalendarTypeChange(type) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = type.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (selected) CoralPrimary else TextSecondary,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = CardWhite)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { onMonthChange(displayMonth.minusMonths(1)) }) {
+                        Icon(imageVector = Icons.Filled.ChevronLeft, contentDescription = "이전 달", tint = TextSecondary)
+                    }
+                    Text(
+                        text = "${displayMonth.year}년 ${displayMonth.monthValue}월",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    IconButton(onClick = { onMonthChange(displayMonth.plusMonths(1)) }) {
+                        Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = "다음 달", tint = TextSecondary)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    listOf("일", "월", "화", "수", "목", "금", "토").forEach { label ->
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                val firstOfMonth = displayMonth.atDay(1)
+                val leadingBlanks = firstOfMonth.dayOfWeek.value % 7 // Sunday(7)->0, Monday(1)->1, ...
+                val daysInMonth = displayMonth.lengthOfMonth()
+                val totalCells = leadingBlanks + daysInMonth
+                val rowCount = (totalCells + 6) / 7
+
+                for (row in 0 until rowCount) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        for (col in 0..6) {
+                            val cellIndex = row * 7 + col
+                            val dayNumber = cellIndex - leadingBlanks + 1
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                if (dayNumber in 1..daysInMonth) {
+                                    val date = displayMonth.atDay(dayNumber)
+                                    val dotColor = if (calendarType == ReportCalendarType.SKIN) {
+                                        skinDotColor(date, skinEntries)
+                                    } else {
+                                        foodDotColor(date, mealLogViewModel)
+                                    }
+                                    CalendarDayCell(
+                                        date = date,
+                                        isToday = date == LocalDate.now(),
+                                        inRange = !date.isBefore(rangeStart) && !date.isAfter(rangeEnd),
+                                        dotColor = dotColor,
+                                        onClick = { onDateTap(date) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PeriodChip(text = "최근 7일", selected = preset == ReportPeriodPreset.LAST_7, modifier = Modifier.weight(1f), onClick = { onPresetSelected(ReportPeriodPreset.LAST_7) })
+            PeriodChip(text = "최근 30일", selected = preset == ReportPeriodPreset.LAST_30, modifier = Modifier.weight(1f), onClick = { onPresetSelected(ReportPeriodPreset.LAST_30) })
+            PeriodChip(text = "직접 선택", selected = preset == ReportPeriodPreset.CUSTOM, modifier = Modifier.weight(1f), onClick = { onPresetSelected(ReportPeriodPreset.CUSTOM) })
+        }
+
+        if (preset == ReportPeriodPreset.CUSTOM) {
+            Text(text = "캘린더에서 시작일과 종료일을 눌러 선택해주세요", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+        }
+
+        Text(
+            text = "선택 기간: ${rangeStart.monthValue}.${rangeStart.dayOfMonth} ~ ${rangeEnd.monthValue}.${rangeEnd.dayOfMonth}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+
+        Button(
+            onClick = onGenerateClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = CoralPrimary, contentColor = Color.White)
+        ) {
+            Text(text = "리포트 생성하기", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+private fun skinDotColor(date: LocalDate, entries: List<SkinLogEntry>): Color? {
+    val dayEntries = entries.filter { it.loggedAt.toLocalDate() == date }
+    if (dayEntries.isEmpty()) return null
+    val average = dayEntries.flatMap { listOf(it.troubleLevel, it.oilLevel, it.drynessLevel) }.average()
+    return when {
+        average <= 2.0 -> PositiveTagText
+        average <= 3.5 -> CautionTagText
+        else -> WarningTagText
+    }
+}
+
+private fun foodDotColor(date: LocalDate, mealLogViewModel: MealLogViewModel): Color? {
+    val dayEntries = mealLogViewModel.entriesForDate(date)
+    if (dayEntries.isEmpty()) return null
+    val score = SkinScoreCalculator.scoreForEntries(dayEntries)
+    return when {
+        score >= 75 -> PositiveTagText
+        score >= 55 -> CautionTagText
+        else -> WarningTagText
+    }
+}
+
+@Composable
+private fun CalendarDayCell(date: LocalDate, isToday: Boolean, inRange: Boolean, dotColor: Color?, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(vertical = 3.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = if (inRange) CoralPrimary.copy(alpha = 0.15f) else Color.Transparent,
+            modifier = Modifier.size(30.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = "${date.dayOfMonth}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isToday) CoralPrimary else TextPrimary,
+                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(3.dp))
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .background(color = dotColor ?: Color.Transparent, shape = CircleShape)
+        )
+    }
+}
+
+@Composable
+private fun PeriodChip(text: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(50),
+        color = if (selected) CoralPrimary else SurfaceMuted
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) Color.White else TextSecondary,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp)
+        )
+    }
+}
+
+@Composable
+private fun ReportLoadingContent(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(color = CoralPrimary)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = "리포트를 생성하고 있어요...", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+        }
+    }
+}
 
 private data class SkinChangeStat(val label: String, val value: String, val statusLabel: String, val isPositive: Boolean)
 
@@ -87,12 +435,21 @@ private val foodImpacts = listOf(
 private val practiceTrend = listOf(30f, 55f, 48f, 62f, 90f)
 
 @Composable
-fun ReportScreen(modifier: Modifier = Modifier, skinLogViewModel: SkinLogViewModel = viewModel()) {
+private fun GeneratedReportContent(
+    modifier: Modifier = Modifier,
+    rangeStart: LocalDate,
+    rangeEnd: LocalDate,
+    skinLogViewModel: SkinLogViewModel,
+    onBackToSelect: () -> Unit
+) {
     val entries by skinLogViewModel.entries.collectAsState()
-    val sortedEntries = remember(entries) { entries.sortedBy { it.loggedAt } }
-    val first = sortedEntries.firstOrNull()
-    val last = sortedEntries.lastOrNull()
-    val hasEnoughHistory = sortedEntries.size >= 2 && first != null && last != null
+    val rangedEntries = remember(entries, rangeStart, rangeEnd) {
+        entries.filter { !it.loggedAt.toLocalDate().isBefore(rangeStart) && !it.loggedAt.toLocalDate().isAfter(rangeEnd) }
+            .sortedBy { it.loggedAt }
+    }
+    val first = rangedEntries.firstOrNull()
+    val last = rangedEntries.lastOrNull()
+    val hasEnoughHistory = rangedEntries.size >= 2 && first != null && last != null
 
     val skinChangeStats = if (hasEnoughHistory && first != null && last != null) {
         listOf(
@@ -111,9 +468,19 @@ fun ReportScreen(modifier: Modifier = Modifier, skinLogViewModel: SkinLogViewMod
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onBackToSelect),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(imageVector = Icons.Filled.ChevronLeft, contentDescription = null, tint = CoralPrimary)
+            Text(text = "기간 다시 선택", style = MaterialTheme.typography.bodyMedium, color = CoralPrimary, fontWeight = FontWeight.Bold)
+        }
+
         Column {
             Text(
-                text = "2주간의 피부 변화",
+                text = "${rangeStart.monthValue}.${rangeStart.dayOfMonth} ~ ${rangeEnd.monthValue}.${rangeEnd.dayOfMonth} 피부 변화",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary

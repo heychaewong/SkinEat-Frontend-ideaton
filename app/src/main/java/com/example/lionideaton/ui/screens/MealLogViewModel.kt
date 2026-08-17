@@ -35,10 +35,10 @@ class MealLogViewModel : ViewModel() {
         _entries.update { it + entry }
     }
 
-    fun todayEntries(): List<MealLogEntry> {
-        val today = LocalDate.now()
-        return entries.value.filter { it.eatenAt.toLocalDate() == today }
-    }
+    fun todayEntries(): List<MealLogEntry> = entriesForDate(LocalDate.now())
+
+    fun entriesForDate(date: LocalDate): List<MealLogEntry> =
+        entries.value.filter { it.eatenAt.toLocalDate() == date }
 
     fun recentEntries(days: Long = 7): List<MealLogEntry> {
         val cutoff = LocalDateTime.now().minusDays(days)

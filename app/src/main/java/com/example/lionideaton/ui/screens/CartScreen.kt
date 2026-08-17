@@ -1,5 +1,8 @@
 package com.example.lionideaton.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.lionideaton.ui.theme.CardWhite
@@ -42,6 +46,7 @@ import com.example.lionideaton.ui.theme.CoralPrimary
 import com.example.lionideaton.ui.theme.SurfaceMuted
 import com.example.lionideaton.ui.theme.TextPrimary
 import com.example.lionideaton.ui.theme.TextSecondary
+import java.net.URLEncoder
 
 private data class SuggestedMealPlan(val day: String, val menu: String)
 
@@ -54,6 +59,7 @@ private val suggestedMealPlans = listOf(
 fun CartScreen(modifier: Modifier = Modifier, cartViewModel: CartViewModel) {
     val cartItems by cartViewModel.items.collectAsState()
     val total = cartItems.sumOf { it.unitPrice * it.quantity }
+    val context = LocalContext.current
 
     if (cartItems.isEmpty()) {
         EmptyCartMessage(modifier = modifier)
@@ -79,7 +85,13 @@ fun CartScreen(modifier: Modifier = Modifier, cartViewModel: CartViewModel) {
 
         MealPlanPreviewCard(plans = suggestedMealPlans)
 
-        ShoppingIntegrationPlaceholderCard()
+        ShoppingIntegrationCard(
+            onClick = {
+                val query = cartItems.joinToString(" ") { it.name }
+                val url = "https://www.coupang.com/np/search?q=${URLEncoder.encode(query, "UTF-8")}"
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            }
+        )
 
         Button(
             onClick = {},
@@ -213,12 +225,14 @@ private fun MealPlanPreviewCard(plans: List<SuggestedMealPlan>) {
     }
 }
 
-// Placeholder for future e-commerce integration (Coupang/Kurly) — explicitly out of MVP scope,
-// shown only as a "coming soon" affordance per the design mockup.
+// Opens a Coupang search for the cart's ingredient names — a browse-only deep link (no API,
+// no cart mutation). Real checkout/payment stays out of scope per the spec's own exclusions.
 @Composable
-private fun ShoppingIntegrationPlaceholderCard() {
+private fun ShoppingIntegrationCard(onClick: () -> Unit) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = SurfaceMuted
     ) {
@@ -232,25 +246,18 @@ private fun ShoppingIntegrationPlaceholderCard() {
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "이커머스 마트 즉시 구매 연동",
+                    text = "쿠팡에서 재료 구매하기",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "쿠팡, 컬리 연동 예정 (서비스 준비 중)",
+                    text = "담은 재료로 쿠팡 검색 결과를 열어요",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
             }
-            Surface(shape = RoundedCornerShape(50), color = CardWhite) {
-                Text(
-                    text = "쇼핑몰 연동 예정",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                )
-            }
+            Icon(imageVector = Icons.Filled.OpenInNew, contentDescription = null, tint = TextSecondary)
         }
     }
 }
