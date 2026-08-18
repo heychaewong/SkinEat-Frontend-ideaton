@@ -2,17 +2,27 @@ package com.example.lionideaton.data.model
 
 // Mirrors `users.skin_type` enum.
 enum class SkinType(val label: String) {
-    OILY("지성"),
     DRY("건성"),
-    COMBINATION("복합성")
+    NORMAL("중성"),
+    OILY("지성"),
+    COMBINATION("복합성"),
+    COMBINATION_OILY("수부지")
 }
 
 // Mirrors `users.concerns` JSON array values.
 enum class SkinConcern(val label: String) {
-    ACNE("트러블"),
-    DRYNESS("건조함"),
-    SEBUM("유분"),
-    PIGMENTATION("색소침착")
+    ATOPY("아토피"),
+    ACNE("여드름"),
+    SENSITIVE("민감성"),
+    PIGMENTATION("미백/잡티"),
+    SEBUM("피지/블랙헤드"),
+    DARK_CIRCLE("다크서클"),
+    INNER_DRYNESS("속건조"),
+    WRINKLE("주름/탄력"),
+    PORES("모공"),
+    REDNESS("홍조"),
+    KERATIN("각질"),
+    NONE("해당없음")
 }
 
 // Mirrors `user_constraint.type` — allergy is a hard exclude, dislike suggests alternates instead.

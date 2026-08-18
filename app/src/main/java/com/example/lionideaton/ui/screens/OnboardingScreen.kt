@@ -43,8 +43,6 @@ import com.example.lionideaton.data.model.SkinConcern
 import com.example.lionideaton.data.model.SkinType
 import com.example.lionideaton.ui.theme.CardWhite
 import com.example.lionideaton.ui.theme.CoralPrimary
-import com.example.lionideaton.ui.theme.PhotoPromptAccent
-import com.example.lionideaton.ui.theme.PhotoPromptBackground
 import com.example.lionideaton.ui.theme.TextPrimary
 import com.example.lionideaton.ui.theme.TextSecondary
 
@@ -57,35 +55,33 @@ fun OnboardingScreen(
 ) {
     var selectedSkinType by remember { mutableStateOf<SkinType?>(null) }
     var selectedConcerns by remember { mutableStateOf(setOf<SkinConcern>()) }
-    var allergyInput by remember { mutableStateOf("") }
-    var allergies by remember { mutableStateOf(listOf<String>()) }
-    var dislikeInput by remember { mutableStateOf("") }
-    var dislikes by remember { mutableStateOf(listOf<String>()) }
+    var allergyInputs by remember { mutableStateOf(listOf("")) }
+    var dislikeInputs by remember { mutableStateOf(listOf("")) }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 24.dp),
+            .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Column {
-            Text(
-                text = "Skin Basket에 오신 걸 환영해요",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "몇 가지만 알려주시면 맞춤 분석과 추천을 시작할게요.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
-            )
+        Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+                Text(text = "피부 정보", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "맞춤 서비스를 이용하려면 반드시 선택해 주세요",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
         }
 
-        OnboardingCard(title = "피부타입을 선택해주세요") {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Text(text = "피부타입", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(text = "(1개)", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Spacer(modifier = Modifier.height(10.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SkinType.entries.forEach { type ->
                     SelectableChip(
                         text = type.label,
@@ -96,17 +92,19 @@ fun OnboardingScreen(
             }
         }
 
-        OnboardingCard(title = "피부 고민을 선택해주세요 (여러 개 가능)") {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Text(text = "피부고민", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(10.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SkinConcern.entries.forEach { concern ->
                     SelectableChip(
                         text = concern.label,
                         selected = selectedConcerns.contains(concern),
                         onClick = {
-                            selectedConcerns = if (selectedConcerns.contains(concern)) {
-                                selectedConcerns - concern
-                            } else {
-                                selectedConcerns + concern
+                            selectedConcerns = when {
+                                concern == SkinConcern.NONE -> setOf(SkinConcern.NONE)
+                                selectedConcerns.contains(concern) -> selectedConcerns - concern
+                                else -> (selectedConcerns + concern) - SkinConcern.NONE
                             }
                         }
                     )
@@ -114,34 +112,20 @@ fun OnboardingScreen(
             }
         }
 
+        Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+
         ChipInputCard(
             title = "알레르기가 있는 재료",
             placeholder = "예: 밀가루",
-            inputValue = allergyInput,
-            onInputChange = { allergyInput = it },
-            items = allergies,
-            onAdd = {
-                if (allergyInput.isNotBlank()) {
-                    allergies = allergies + allergyInput.trim()
-                    allergyInput = ""
-                }
-            },
-            onRemove = { name -> allergies = allergies - name }
+            inputs = allergyInputs,
+            onInputsChange = { allergyInputs = it }
         )
 
         ChipInputCard(
             title = "못 먹거나 선호하지 않는 음식",
             placeholder = "예: 오이",
-            inputValue = dislikeInput,
-            onInputChange = { dislikeInput = it },
-            items = dislikes,
-            onAdd = {
-                if (dislikeInput.isNotBlank()) {
-                    dislikes = dislikes + dislikeInput.trim()
-                    dislikeInput = ""
-                }
-            },
-            onRemove = { name -> dislikes = dislikes - name }
+            inputs = dislikeInputs,
+            onInputsChange = { dislikeInputs = it }
         )
 
         Button(
@@ -150,12 +134,12 @@ fun OnboardingScreen(
                 userProfileViewModel.completeOnboarding(
                     skinType = skinType,
                     concerns = selectedConcerns.toList(),
-                    allergies = allergies,
-                    dislikes = dislikes
+                    allergies = allergyInputs.map { it.trim() }.filter { it.isNotBlank() },
+                    dislikes = dislikeInputs.map { it.trim() }.filter { it.isNotBlank() }
                 )
                 onCompleted()
             },
-            enabled = selectedSkinType != null,
+            enabled = selectedSkinType != null && selectedConcerns.isNotEmpty(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
@@ -163,6 +147,7 @@ fun OnboardingScreen(
             colors = ButtonDefaults.buttonColors(containerColor = CoralPrimary, contentColor = Color.White)
         ) {
             Text(text = "시작하기", fontWeight = FontWeight.Bold)
+        }
         }
     }
 }
@@ -199,47 +184,45 @@ private fun SelectableChip(text: String, selected: Boolean, onClick: () -> Unit)
     }
 }
 
+// Each "+" tap appends one more blank input row rather than reusing a single field —
+// the user can fill in several items at once, each in its own removable row.
 @Composable
 private fun ChipInputCard(
     title: String,
     placeholder: String,
-    inputValue: String,
-    onInputChange: (String) -> Unit,
-    items: List<String>,
-    onAdd: () -> Unit,
-    onRemove: (String) -> Unit
+    inputs: List<String>,
+    onInputsChange: (List<String>) -> Unit
 ) {
     OnboardingCard(title = title) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = inputValue,
-                onValueChange = onInputChange,
-                modifier = Modifier.weight(1f),
-                placeholder = { Text(text = placeholder) },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            IconButton(onClick = onAdd) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = "추가", tint = CoralPrimary)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            inputs.forEachIndexed { index, value ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { newValue ->
+                            onInputsChange(inputs.toMutableList().also { it[index] = newValue })
+                        },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text(text = placeholder) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = {
+                        val updated = inputs.toMutableList().also { it.removeAt(index) }
+                        onInputsChange(updated.ifEmpty { listOf("") })
+                    }) {
+                        Icon(imageVector = Icons.Filled.Close, contentDescription = "삭제", tint = TextSecondary)
+                    }
+                }
             }
-        }
-        if (items.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items.forEach { item -> RemovableChip(text = item, onRemove = { onRemove(item) }) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun RemovableChip(text: String, onRemove: () -> Unit) {
-    Surface(shape = RoundedCornerShape(50), color = PhotoPromptBackground) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)) {
-            Text(text = text, style = MaterialTheme.typography.bodySmall, color = PhotoPromptAccent, fontWeight = FontWeight.Medium)
-            IconButton(onClick = onRemove, modifier = Modifier.size(20.dp).padding(start = 2.dp)) {
-                Icon(imageVector = Icons.Filled.Close, contentDescription = "삭제", tint = PhotoPromptAccent, modifier = Modifier.size(14.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { onInputsChange(inputs + "") }
+            ) {
+                Icon(imageVector = Icons.Filled.Add, contentDescription = null, tint = CoralPrimary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = "입력칸 추가", style = MaterialTheme.typography.bodySmall, color = CoralPrimary, fontWeight = FontWeight.Medium)
             }
         }
     }

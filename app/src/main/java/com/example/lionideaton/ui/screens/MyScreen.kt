@@ -80,19 +80,23 @@ private fun tagsFor(profile: UserProfile): List<SkinTargetTag> = buildList {
     }
 }
 
-private data class MyPageListItem(val title: String, val trailingInfo: String)
+private data class MyPageListItem(val title: String, val trailingInfo: String, val onClick: () -> Unit)
 
 @Composable
 fun MyScreen(
     modifier: Modifier = Modifier,
     cartViewModel: CartViewModel,
     skinLogViewModel: SkinLogViewModel,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    mealLogViewModel: MealLogViewModel,
+    onSkinPhotoHistoryClick: () -> Unit = {},
+    onMealLogHistoryClick: () -> Unit = {}
 ) {
     val profile by userProfileViewModel.profile.collectAsState()
     val cartItems by cartViewModel.items.collectAsState()
     val skinLogEntries by skinLogViewModel.entries.collectAsState()
     val skinPhotoCount = skinLogEntries.count { it.photo != null }
+    val mealLogEntries by mealLogViewModel.entries.collectAsState()
     var mealLogReminderEnabled by remember { mutableStateOf(true) }
     var skinPhotoReminderEnabled by remember { mutableStateOf(false) }
 
@@ -118,9 +122,9 @@ fun MyScreen(
     }
 
     val myPageListItems = listOf(
-        MyPageListItem("피부 사진 히스토리", "${skinPhotoCount}장 보관 중"),
-        MyPageListItem("식습관 로그 전체 보기", "총 84식단"),
-        MyPageListItem("구독 & 멤버십 관리", "무료 등급 사용 중")
+        MyPageListItem("피부 사진 히스토리", "${skinPhotoCount}장 보관 중", onSkinPhotoHistoryClick),
+        MyPageListItem("식습관 로그 전체 보기", "총 ${mealLogEntries.size}식단", onMealLogHistoryClick),
+        MyPageListItem("구독 & 멤버십 관리", "유료 등급 사용 중", {})
     )
 
     Column(
@@ -485,9 +489,8 @@ private fun NotificationSettingRow(label: String, checked: Boolean, onCheckedCha
 
 @Composable
 private fun MyPageListRow(item: MyPageListItem) {
-    // No destination screens exist yet for these — visual only for now.
     Card(
-        modifier = Modifier.fillMaxWidth().clickable {},
+        modifier = Modifier.fillMaxWidth().clickable(onClick = item.onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite)
     ) {

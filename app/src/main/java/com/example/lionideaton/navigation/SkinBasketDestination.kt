@@ -21,7 +21,9 @@ enum class SkinBasketDestination(
     Recipe(route = "recipe", label = "레시피 상세"),
     SkinLog(route = "skin", label = "피부기록"),
     Report(route = "report", label = "리포트", icon = Icons.Filled.BarChart),
-    My(route = "my", label = "마이", icon = Icons.Filled.Person);
+    My(route = "my", label = "마이", icon = Icons.Filled.Person),
+    SkinPhotoHistory(route = "skin_photo_history", label = "피부 사진 히스토리"),
+    MealLogHistory(route = "meal_log_history", label = "식습관 로그 전체 보기");
 
     companion object {
         // Explicit order for the bottom bar: 홈 / 리포트 / (카메라 — a special center button

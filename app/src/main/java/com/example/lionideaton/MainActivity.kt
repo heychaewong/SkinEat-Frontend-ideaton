@@ -71,6 +71,7 @@ import com.example.lionideaton.ui.screens.CartScreen
 import com.example.lionideaton.ui.screens.CartViewModel
 import com.example.lionideaton.ui.screens.FoodLogScreen
 import com.example.lionideaton.ui.screens.HomeScreen
+import com.example.lionideaton.ui.screens.MealLogHistoryScreen
 import com.example.lionideaton.ui.screens.MealLogViewModel
 import com.example.lionideaton.ui.screens.MyScreen
 import com.example.lionideaton.ui.screens.OnboardingScreen
@@ -78,6 +79,7 @@ import com.example.lionideaton.ui.screens.RecipeScreen
 import com.example.lionideaton.ui.screens.ReportScreen
 import com.example.lionideaton.ui.screens.SkinLogScreen
 import com.example.lionideaton.ui.screens.SkinLogViewModel
+import com.example.lionideaton.ui.screens.SkinPhotoHistoryScreen
 import com.example.lionideaton.ui.screens.UserProfileViewModel
 import com.example.lionideaton.ui.theme.CoralPrimary
 import com.example.lionideaton.ui.theme.LionideatonTheme
@@ -108,7 +110,9 @@ private val detailScreenTitles = mapOf(
     SkinBasketDestination.SkinLog.route to "피부기록",
     SkinBasketDestination.Cart.route to "담은 재료",
     SkinBasketDestination.Recipe.route to "레시피 상세",
-    SkinBasketDestination.Report.route to "피부 분석 리포트"
+    SkinBasketDestination.Report.route to "피부 분석 리포트",
+    SkinBasketDestination.SkinPhotoHistory.route to "피부 사진 히스토리",
+    SkinBasketDestination.MealLogHistory.route to "식습관 로그 전체 보기"
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -232,6 +236,7 @@ fun SkinBasketApp() {
                 BasketScreen(
                     cartViewModel = cartViewModel,
                     mealLogViewModel = mealLogViewModel,
+                    userProfileViewModel = userProfileViewModel,
                     onRecipeClick = { navController.navigate(SkinBasketDestination.Recipe.route) }
                 )
             }
@@ -247,8 +252,17 @@ fun SkinBasketApp() {
                 MyScreen(
                     cartViewModel = cartViewModel,
                     skinLogViewModel = skinLogViewModel,
-                    userProfileViewModel = userProfileViewModel
+                    userProfileViewModel = userProfileViewModel,
+                    mealLogViewModel = mealLogViewModel,
+                    onSkinPhotoHistoryClick = { navController.navigate(SkinBasketDestination.SkinPhotoHistory.route) },
+                    onMealLogHistoryClick = { navController.navigate(SkinBasketDestination.MealLogHistory.route) }
                 )
+            }
+            composable(SkinBasketDestination.SkinPhotoHistory.route) {
+                SkinPhotoHistoryScreen(skinLogViewModel = skinLogViewModel)
+            }
+            composable(SkinBasketDestination.MealLogHistory.route) {
+                MealLogHistoryScreen(mealLogViewModel = mealLogViewModel)
             }
         }
     }
