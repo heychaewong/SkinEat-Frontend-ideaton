@@ -5,16 +5,15 @@
 멋쟁이사자처럼 아이디어톤 프로젝트 **SkinEat**의 안드로이드 앱(프론트엔드) 레포지토리입니다.
 서버(백엔드) 등 나머지 파트는 아래 관련 레포를 참고해 주세요.
 
-## 🔗 관련 링크
+## 관련 링크
 
 | 파트 | 링크 |
 | --- | --- |
 | Android (Frontend) | 현재 레포 |
 | Backend | (https://github.com/Skin-Eat/SkinEat_back) |
 | 완성 레포 | (https://github.com/Skin-Eat/SkinEat) |
-| 디자인 (피그마) | https://www.figma.com/design/pUsX11gHs1GdHXolX9HqSl/SkinEat-%ED%94%84%EB%A1%9C%ED%86%A0%ED%83%80%EC%9E%85?node-id=0-1&t=uHlpSZqc4Kzzjt22-1 |
 
-## 📌 주요 기능
+## 주요 기능
 
 - **식단 기록** — 먹은 음식을 기록하고, 음식 사진을 올리면 AI가 분석해 메뉴를 인식
 - **피부 기록** — 그날의 피부 상태와 사진을 기록하고, 사진 히스토리로 변화를 확인
@@ -24,7 +23,7 @@
 - **기록 리마인더** — 매일 기록을 잊지 않도록 주기적인 알림
 - **회원가입 / 로그인** — 로그인 세션 유지, 온보딩, 마이페이지
 
-## 🛠 기술 스택
+## 기술 스택
 
 | 구분 | 내용 |
 | --- | --- |
@@ -38,7 +37,7 @@
 | 빌드 | Gradle (Kotlin DSL), 버전 카탈로그 |
 | SDK | minSdk 24 / targetSdk 34 |
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 app/src/main/java/com/example/lionideaton/
@@ -106,7 +105,7 @@ app/src/main/java/com/example/lionideaton/
 
 ```
 
-## 📱 화면 구성
+## 화면 구성
 
 하단 탭은 **홈 · 리포트 · (기록 버튼) · 장바구니 · 마이**로 구성되어 있고, 가운데 기록 버튼에서 음식 기록과 피부 기록으로 이동합니다.
 
@@ -123,7 +122,7 @@ app/src/main/java/com/example/lionideaton/
 | 마이 | 프로필, 로그아웃 |
 | 히스토리 | 피부 사진 · 식습관 로그 전체 보기 |
 
-## 🎨 디자인
+## 디자인
 
 기획과 UI 디자인을 직접 맡아 Figma로 전 화면을 설계한 뒤, Jetpack Compose로 구현했습니다.
 
@@ -142,10 +141,10 @@ app/src/main/java/com/example/lionideaton/
 - Positive: 세이지 그린 / Caution: 레드
 - Background: 웜 크림 톤으로 건강·자연 이미지 전달
 
-### 🔗 Figma
-[SkinEat 프로토타입 보기](피그마 링크)
+### Figma
+[SkinEat 프로토타입 보기](https://www.figma.com/design/pUsX11gHs1GdHXolX9HqSl/SkinEat-%ED%94%84%EB%A1%9C%ED%86%A0%ED%83%80%EC%9E%85?node-id=0-1&t=uHlpSZqc4Kzzjt22-1))
 
-## 🚀 시작하기
+## 시작하기
 
 ```bash
 git clone https://github.com/Skin-Eat/SkinEat.git
@@ -153,7 +152,7 @@ git clone https://github.com/Skin-Eat/SkinEat.git
 
 Android Studio에서 클론한 폴더를 열고 Gradle 동기화가 끝나면 ▶️ **Run 'app'** 을 누릅니다.
 
-## 🙋 담당 역할
+## 담당 역할
 
 안드로이드 앱의 **전체 화면 UI 설계 및 구현**을 담당했습니다.
 
@@ -161,7 +160,7 @@ Android Studio에서 클론한 폴더를 열고 Gradle 동기화가 끝나면 �
 - Jetpack Compose + Material 3 기반 공통 테마 구성
 - (했다면) 백엔드 API 연동, 리마인더 알림 등 추가로 맡은 부분
 
-## 👥 팀원
+## 팀원
 
 | 이름 | 역할 | GitHub |
 | --- | --- | --- |
@@ -169,7 +168,7 @@ Android Studio에서 클론한 폴더를 열고 Gradle 동기화가 끝나면 �
 | 이름 | Backend | @youngwoofox-coder @gy8879 |
 | 이름 | 기획 / 디자인 | @heychaewong @gy8879 |
 
-## 📸 스크린샷
+## 스크린샷
 
 <!-- 앱 화면 캡처를 추가해 주세요 -->
 | 홈 | 기록 | 리포트 | 장바구니 |
