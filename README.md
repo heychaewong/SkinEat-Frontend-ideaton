@@ -5,13 +5,14 @@
 멋쟁이사자처럼 아이디어톤 프로젝트 **SkinEat**의 안드로이드 앱(프론트엔드) 레포지토리입니다.
 서버(백엔드) 등 나머지 파트는 아래 관련 레포를 참고해 주세요.
 
-## 🔗 관련 레포지토리
+## 🔗 관련 링크
 
-| 파트 | 레포 |
+| 파트 | 링크 |
 | --- | --- |
 | Android (Frontend) | 현재 레포 |
 | Backend | (https://github.com/Skin-Eat/SkinEat_back) |
 | 완성 레포 | (https://github.com/Skin-Eat/SkinEat) |
+| 디자인 (피그마) | https://www.figma.com/design/pUsX11gHs1GdHXolX9HqSl/SkinEat-%ED%94%84%EB%A1%9C%ED%86%A0%ED%83%80%EC%9E%85?node-id=0-1&t=uHlpSZqc4Kzzjt22-1 |
 
 ## 📌 주요 기능
 
