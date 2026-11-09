@@ -57,6 +57,9 @@ Figma 시안은 따뜻한 코랄 톤이었지만, 실제 기기에서 확인해 
 그래서 구현 단계에서 더 건강하고 시원한 인상을 주도록 컬러를 조정했습니다.
 <img width="2400" height="1560" alt="image" src="https://github.com/user-attachments/assets/24470f30-c3b5-4c73-be11-5ed36bdcedf1" />
 
+### Figma
+[SkinEat 프로토타입 보기](https://www.figma.com/design/pUsX11gHs1GdHXolX9HqSl/SkinEat-%ED%94%84%EB%A1%9C%ED%86%A0%ED%83%80%EC%9E%85?node-id=0-1&t=uHlpSZqc4Kzzjt22-1)
+
 ## 주요 기능
 
 - **식단 기록** — 먹은 음식을 기록하고, 음식 사진을 올리면 AI가 분석해 메뉴를 인식
@@ -73,7 +76,6 @@ Figma 시안은 따뜻한 코랄 톤이었지만, 실제 기기에서 확인해 
 
 - 로그인부터 기록, 리포트, 장바구니, 마이페이지까지 전 화면 구현
 - Jetpack Compose + Material 3 기반 공통 테마 구성
-- (했다면) 백엔드 API 연동, 리마인더 알림 등 추가로 맡은 부분
 
 ## 기술 스택
 
@@ -156,9 +158,6 @@ app/src/main/java/com/example/lionideaton/
                         Type.kt
 
 ```
-
-### Figma
-[SkinEat 프로토타입 보기](https://www.figma.com/design/pUsX11gHs1GdHXolX9HqSl/SkinEat-%ED%94%84%EB%A1%9C%ED%86%A0%ED%83%80%EC%9E%85?node-id=0-1&t=uHlpSZqc4Kzzjt22-1)
 
 ## 시작하기
 
