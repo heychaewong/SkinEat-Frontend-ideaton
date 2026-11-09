@@ -137,12 +137,13 @@ app/src/main/java/com/example/lionideaton/
 - **기록 → 분석 → 추천 → 구매로 이어지는 흐름**: 분석 결과에서 부족한 성분을 알려주고, 바로 식재료 추천과 장바구니로 연결해 행동까지 이어지게 설계했습니다.
 
 ### 디자인 시스템
-- Primary: 코랄 (CTA, 강조)
-- Positive: 세이지 그린 / Caution: 레드
-- Background: 웜 크림 톤으로 건강·자연 이미지 전달
+Figma 시안은 따뜻한 코랄 톤이었지만, 실제 기기에서 확인해 보니
+'건강한 식단'이라는 서비스 성격에 비해 다소 무겁게 느껴졌습니다.
+그래서 구현 단계에서 더 건강하고 시원한 인상을 주도록 컬러를 조정했습니다.
+<img width="2400" height="1560" alt="image" src="https://github.com/user-attachments/assets/24470f30-c3b5-4c73-be11-5ed36bdcedf1" />
 
 ### Figma
-[SkinEat 프로토타입 보기](https://www.figma.com/design/pUsX11gHs1GdHXolX9HqSl/SkinEat-%ED%94%84%EB%A1%9C%ED%86%A0%ED%83%80%EC%9E%85?node-id=0-1&t=uHlpSZqc4Kzzjt22-1))
+[SkinEat 프로토타입 보기](https://www.figma.com/design/pUsX11gHs1GdHXolX9HqSl/SkinEat-%ED%94%84%EB%A1%9C%ED%86%A0%ED%83%80%EC%9E%85?node-id=0-1&t=uHlpSZqc4Kzzjt22-1)
 
 ## 시작하기
 
